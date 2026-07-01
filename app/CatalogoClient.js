@@ -37,6 +37,7 @@ export default function CatalogoClient({ photos }) {
   const [selezionati, setSelezionati] = useState(() => new Set());
   const [campiVisibili, setCampiVisibili] = useState(() => new Set(FIELD_KEYS));
   const [pannelloExportAperto, setPannelloExportAperto] = useState(false);
+  const [immagineIngrandita, setImmagineIngrandita] = useState(null);
 
   const opzioni = useMemo(
     () => ({
@@ -272,6 +273,7 @@ export default function CatalogoClient({ photos }) {
                 alt={p.codice}
                 loading="lazy"
                 className="photo main"
+                onClick={() => setImmagineIngrandita(p)}
               />
             </div>
             <div className="info">
@@ -322,6 +324,29 @@ export default function CatalogoClient({ photos }) {
           ))}
         </div>
       </div>
+
+      {immagineIngrandita && (
+        <div
+          className="lightbox no-print"
+          onClick={() => setImmagineIngrandita(null)}
+        >
+          <button
+            type="button"
+            className="lightbox-close"
+            onClick={() => setImmagineIngrandita(null)}
+            aria-label="Chiudi"
+          >
+            ×
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={driveImg(immagineIngrandita.fileId, 1600)}
+            alt={immagineIngrandita.codice}
+            className="lightbox-img"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </>
   );
 }

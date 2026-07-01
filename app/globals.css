@@ -189,6 +189,7 @@ body {
   width: 100%;
   object-fit: contain;
   background: #fff;
+  cursor: zoom-in;
 }
 
 .photo:not(.main) {
@@ -311,6 +312,39 @@ dl {
 
 .card-selected {
   outline: 2px solid #1b1f24;
+}
+
+/* Lightbox foto ingrandita */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  cursor: zoom-out;
+  padding: 30px;
+}
+
+.lightbox-img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  cursor: default;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 2.5rem;
+  line-height: 1;
+  cursor: pointer;
 }
 
 /* Area di stampa: nascosta a schermo, visibile solo in stampa/PDF */
