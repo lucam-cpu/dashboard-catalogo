@@ -1,4 +1,4 @@
-import products from "../data/products.json";
+import photos from "../data/products.json";
 
 function driveImg(fileId, width = 900) {
   return `https://lh3.googleusercontent.com/d/${fileId}=w${width}`;
@@ -18,10 +18,6 @@ const FIELD_LABELS = {
 };
 
 export default function Dashboard() {
-  const sorted = [...products].sort((a, b) =>
-    a.codice.localeCompare(b.codice, "it", { numeric: true })
-  );
-
   return (
     <div className="page">
       <header className="topbar">
@@ -33,22 +29,19 @@ export default function Dashboard() {
         </form>
       </header>
 
-      <p className="count">{sorted.length} articoli</p>
+      <p className="count">{photos.length} foto</p>
 
       <div className="grid">
-        {sorted.map((p) => (
-          <article className="card" key={p.codice}>
+        {photos.map((p) => (
+          <article className="card" key={p.fileId}>
             <div className="photos">
-              {p.foto.map((f, i) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  key={f.fileId}
-                  src={driveImg(f.fileId)}
-                  alt={p.codice}
-                  loading="lazy"
-                  className={i === 0 ? "photo main" : "photo"}
-                />
-              ))}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={driveImg(p.fileId)}
+                alt={p.codice}
+                loading="lazy"
+                className="photo main"
+              />
             </div>
             <div className="info">
               <h2>{p.codice}</h2>
