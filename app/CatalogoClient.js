@@ -19,6 +19,8 @@ const FIELD_LABELS = {
   NOTE: "Note",
 };
 
+const FIELD_KEYS = Object.keys(FIELD_LABELS);
+
 function uniqueSorted(values) {
   return [...new Set(values.filter(Boolean))].sort((a, b) =>
     a.localeCompare(b, "it", { numeric: true })
@@ -31,6 +33,10 @@ export default function CatalogoClient({ photos }) {
   const [stagione, setStagione] = useState("");
   const [fornitore, setFornitore] = useState("");
   const [cliente, setCliente] = useState("");
+
+  const [selezionati, setSelezionati] = useState(() => new Set());
+  const [campiVisibili, setCampiVisibili] = useState(() => new Set(FIELD_KEYS));
+  const [pannelloExportAperto, setPannelloExportAperto] = useState(false);
 
   const opzioni = useMemo(
     () => ({
@@ -53,6 +59,14 @@ export default function CatalogoClient({ photos }) {
       .sort((a, b) => a.codice.localeCompare(b.codice, "it", { numeric: true }));
   }, [photos, articolo, tessuto, stagione, fornitore, cliente]);
 
+  const selezionatiOrdinati = useMemo(
+    () =>
+      photos
+        .filter((p) => selezionati.has(p.fileId))
+        .sort((a, b) => a.codice.localeCompare(b.codice, "it", { numeric: true })),
+    [photos, selezionati]
+  );
+
   const reset = () => {
     setArticolo("");
     setTessuto("");
@@ -63,9 +77,49 @@ export default function CatalogoClient({ photos }) {
 
   const filtriAttivi = articolo || tessuto || stagione || fornitore || cliente;
 
+  function toggleSelezione(fileId) {
+    setSelezionati((prev) => {
+      const next = new Set(prev);
+      if (next.has(fileId)) {
+        next.delete(fileId);
+      } else {
+        next.add(fileId);
+      }
+      return next;
+    });
+  }
+
+  function selezionaTuttiVisibili() {
+    setSelezionati((prev) => {
+      const next = new Set(prev);
+      filtrate.forEach((p) => next.add(p.fileId));
+      return next;
+    });
+  }
+
+  function deselezionaTutti() {
+    setSelezionati(new Set());
+  }
+
+  function toggleCampo(key) {
+    setCampiVisibili((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  }
+
+  function stampaOPdf() {
+    window.print();
+  }
+
   return (
     <>
-      <div className="filters">
+      <div className="filters no-print">
         <div className="filter-field">
           <label htmlFor="f-articolo">Articolo</label>
           <select
@@ -153,11 +207,64 @@ export default function CatalogoClient({ photos }) {
         ) : null}
       </div>
 
-      <p className="count">{filtrate.length} foto</p>
+      <div className="export-bar no-print">
+        <p className="count">
+          {filtrate.length} foto &middot; {selezionati.size} selezionati
+        </p>
+        <div className="export-actions">
+          <button type="button" className="link-btn" onClick={selezionaTuttiVisibili}>
+            Seleziona tutti i visibili
+          </button>
+          <button type="button" className="link-btn" onClick={deselezionaTutti}>
+            Deseleziona tutti
+          </button>
+          <button
+            type="button"
+            className="reset-btn"
+            onClick={() => setPannelloExportAperto((v) => !v)}
+          >
+            Campi da includere
+          </button>
+          <button
+            type="button"
+            className="print-btn"
+            disabled={selezionati.size === 0}
+            onClick={stampaOPdf}
+          >
+            Stampa / Crea PDF ({selezionati.size})
+          </button>
+        </div>
+      </div>
 
-      <div className="grid">
+      {pannelloExportAperto && (
+        <div className="fields-panel no-print">
+          {FIELD_KEYS.map((key) => (
+            <label key={key} className="field-check">
+              <input
+                type="checkbox"
+                checked={campiVisibili.has(key)}
+                onChange={() => toggleCampo(key)}
+              />
+              {FIELD_LABELS[key]}
+            </label>
+          ))}
+        </div>
+      )}
+
+      <div className="grid no-print">
         {filtrate.map((p) => (
-          <article className="card" key={p.fileId}>
+          <article
+            className={`card${selezionati.has(p.fileId) ? " card-selected" : ""}`}
+            key={p.fileId}
+          >
+            <label className="select-check">
+              <input
+                type="checkbox"
+                checked={selezionati.has(p.fileId)}
+                onChange={() => toggleSelezione(p.fileId)}
+              />
+              Seleziona
+            </label>
             <div className="photos">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -186,6 +293,34 @@ export default function CatalogoClient({ photos }) {
             </div>
           </article>
         ))}
+      </div>
+
+      {/* Area visibile solo in stampa/PDF, con solo gli articoli selezionati e i campi scelti */}
+      <div className="print-area">
+        <h1 className="print-title">Catalogo Articoli</h1>
+        <div className="print-grid">
+          {selezionatiOrdinati.map((p) => (
+            <div className="print-card" key={p.fileId}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={driveImg(p.fileId)} alt={p.codice} className="print-photo" />
+              <div className="print-info">
+                <h2>{p.codice}</h2>
+                {p.dati ? (
+                  <dl>
+                    {FIELD_KEYS.filter((key) => campiVisibili.has(key) && p.dati[key]).map(
+                      (key) => (
+                        <div className="row" key={key}>
+                          <dt>{FIELD_LABELS[key]}</dt>
+                          <dd>{p.dati[key]}</dd>
+                        </div>
+                      )
+                    )}
+                  </dl>
+                ) : null}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </>
   );
