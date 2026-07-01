@@ -8,7 +8,7 @@ export async function POST(request) {
   const url = new URL(request.url);
 
   if (expected !== "" && password === expected) {
-    const response = NextResponse.redirect(new URL("/", url));
+    const response = NextResponse.redirect(new URL("/", url), 303);
     response.cookies.set("dash_auth", "granted", {
       httpOnly: true,
       secure: true,
@@ -19,6 +19,6 @@ export async function POST(request) {
     return response;
   }
 
-  const response = NextResponse.redirect(new URL("/login?errore=1", url));
+  const response = NextResponse.redirect(new URL("/login?errore=1", url), 303);
   return response;
 }
